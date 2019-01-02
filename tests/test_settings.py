@@ -1,5 +1,5 @@
 import unittest
-from wegq import settings, wechat
+from wework import settings, wechat
 
 
 class TestSettings(unittest.TestCase):

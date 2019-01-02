@@ -1,4 +1,4 @@
-# wegq
+# wework
 微信企业开发通用库
 
 
@@ -15,22 +15,23 @@ $ python(3) setup.py install
 
 # django
 
-import wegq
+import wework
 
 
-w = wegq.init(
-    CROP_ID='CROP_ID',
-    PROVIDER_SECRET='PROVIDER_SECRET',
-    REGISTER_URL='REGISTER_URL',
-    HELPER='wegq.DjangoHelper'
+w = wework.init(
+    SUITE_ID=SUITE_ID,
+    SUITE_SECRET=SUITE_SECRET,
+    REGISTER_URL=REGISTER_URL,
+    HELPER=wegq.DjangoHelper
 )
 
-@w.login_required
+@w.web_login_required(scope='snsapi_privateinfo')
 def index(request):
 	wx_user = request.work_wx_user
-    string = f'{user.name}, {user.userid}, {user.email}'
+    string = wx_user.__dict__'
     return HttpResponse(string)
 ```
+
 
 
 ## License

@@ -1,9 +1,6 @@
 from .helpers import BaseHelper
 from .wechat import WorkWechatApi
-
-
-class InitError(Exception):
-    pass
+from .ierror import InitError
 
 
 class Settings(object):
@@ -22,10 +19,8 @@ def init(**kwargs):
 
 def check(settings):
     required_list = [
-        'CROP_ID',
-        'PROVIDER_SECRET',
         'REGISTER_URL',
-        'HELPER'
+        'HELPER',
     ]
     for key in required_list:
         if key not in settings:
