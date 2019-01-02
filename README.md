@@ -22,7 +22,7 @@ w = wework.init(
     SUITE_ID=SUITE_ID,
     SUITE_SECRET=SUITE_SECRET,
     REGISTER_URL=REGISTER_URL,
-    HELPER=wegq.DjangoHelper
+    HELPER=wego.DjangoHelper
 )
 
 @w.web_login_required(scope='snsapi_privateinfo')
