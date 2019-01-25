@@ -1,7 +1,8 @@
 import json
 import time
 import requests
-from .ierror import InitError
+from .ierror import InitError, SendMsgError, GetAccessTokenError, GetUserTicketError
+from .base import BaseWechatAPI
 
 
 class WechatUser(object):
@@ -10,22 +11,6 @@ class WechatUser(object):
 
     def __getattr__(self, item):
         return self.data[item]
-
-
-class BaseWechatApi(object):
-    @property
-    def access_token(self):
-        g = self._global_access_token
-        if 'access_token' not in g or time.time() >= g['expires_time']:
-            self._get_access_token()
-        return self._global_access_token['access_token']
-
-    @access_token.setter
-    def access_token(self, value):
-        raise ValueError('禁止对 access_token 进行赋值操作')
-
-    def _get_access_token(self):
-        raise ValueError('无法获取 access_token')
 
 
 class WorkWechatApi(object):
@@ -64,7 +49,7 @@ class WorkWechatApi(object):
         self.suite_api.suite_ticket = value
 
 
-class WorkWechatSuiteApi(BaseWechatApi):
+class WorkWechatSuiteApi(BaseWechatAPI):
     """第三方应用api"""
     def __init__(self, settings):
         self.settings = settings
@@ -98,7 +83,7 @@ class WorkWechatSuiteApi(BaseWechatApi):
             self._global_access_token['access_token'] = data['suite_access_token']
             self._global_access_token['expires_time'] = data['expires_in'] + int(time.time())
         except KeyError:
-            raise ValueError(data)
+            raise GetAccessTokenError(data)
 
     def get_web_login_url(self, login_path, scope='snsapi_userinfo'):
         """
@@ -144,7 +129,10 @@ class WorkWechatSuiteApi(BaseWechatApi):
         url = 'https://qyapi.weixin.qq.com/cgi-bin/service/getuserinfo3rd?access_token={}&code={}'.format(
             self.access_token, code
         )
-        return requests.get(url).json()['user_ticket']
+        data = requests.get(url).json()
+        if 'user_ticket' not in data:
+            raise GetUserTicketError(data)
+        return data['user_ticket']
 
     def get_user_info(self, code):
         """
@@ -182,7 +170,7 @@ class WorkWechatSuiteApi(BaseWechatApi):
         return wrapper
 
 
-class WorkProviderWechatApi(BaseWechatApi):
+class WorkProviderWechatApi(BaseWechatAPI):
     """服务商api"""
     def __init__(self, settings):
         self.settings = settings
