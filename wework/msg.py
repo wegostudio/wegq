@@ -193,10 +193,7 @@ class MSG(object):
             'agentid': self.agent_id,
             'safe': self.safe
         }
-        data = requests.post(url, json.dumps(data)).json()
-        if data['errcode'] != 0:
-            raise SendMsgError(data)
-        return data['errmsg']
+        return rq.post(url, data)
 
     def upload_temp_media(self, type, file, filename):
         """

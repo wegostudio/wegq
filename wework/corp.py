@@ -2,18 +2,12 @@ import json
 import requests
 import time
 from .base import BaseWechatAPI
-from .ierror import GetAccessTokenError, APIValueError
+from .ierror import GetAccessTokenError
 from .msg import MSG
+import wework.rq as rq
 
 
 __all__ = ['WorkWechatCorpAPI']
-
-
-def rq_get(url):
-    data = requests.get(url).json()
-    if data['errcode'] != 0:
-        raise APIValueError(data)
-    return data
 
 
 class WorkWechatCorpAPI(BaseWechatAPI):
@@ -28,6 +22,17 @@ class WorkWechatCorpAPI(BaseWechatAPI):
         self.agent_id = agent_id
         self._global_access_token = {}
 
+    @classmethod
+    def new(cls, access_token, agent_id):
+        obj = cls('__', '__', agent_id)
+
+        def _get_access_token():
+            nonlocal access_token
+            t = int(time.time()) + 7200
+            return access_token, t
+        obj._get_access_token = _get_access_token
+        return obj
+
     @property
     def msg(self):
         return MSG(self.access_token, self.agent_id)
@@ -37,11 +42,7 @@ class WorkWechatCorpAPI(BaseWechatAPI):
         data = requests.get(url).json()
         if 'access_token' not in data:
             raise GetAccessTokenError(data)
-        try:
-            self._global_access_token['access_token'] = data['access_token']
-            self._global_access_token['expires_time'] = data['expires_in'] + int(time.time())
-        except KeyError:
-            raise GetAccessTokenError(data)
+        return data['access_token'], data['expires_in']
 
     def get_department_list(self, id=None):
         """
@@ -54,12 +55,12 @@ class WorkWechatCorpAPI(BaseWechatAPI):
            "name": "广州研发中心", # 部门名称
            "parentid": 1, # 父亲部门id。根部门为1
            "order": 10， # 在父部门中的次序值。order值大的排序靠前。值范围是[0, 2^32)
-       }],
+        }],
         """
         url = 'https://qyapi.weixin.qq.com/cgi-bin/department/list?access_token={}'.format(self.access_token)
         if id is not None:
             url += '&id={}'.format(id)
-        return rq_get(url)['department']
+        return rq.get(url)['department']
 
     def get_department_user_list(self, department_id, fetch_child=False):
         """
@@ -79,7 +80,7 @@ class WorkWechatCorpAPI(BaseWechatAPI):
         fetch_child = 1 if fetch_child else 0
         url = 'https://qyapi.weixin.qq.com/cgi-bin/user/simplelist?' \
               'access_token={}&department_id={}&fetch_child={}'.format(self.access_token, department_id, fetch_child)
-        return rq_get(url)['userlist']
+        return rq.get(url)['userlist']
 
     def get_department_user_detail_list(self, department_id, fetch_child=False):
         """
@@ -158,7 +159,7 @@ class WorkWechatCorpAPI(BaseWechatAPI):
         fetch_child = 1 if fetch_child else 0
         url = 'https://qyapi.weixin.qq.com/cgi-bin/user/list?' \
               'access_token={}&department_id={}&fetch_child={}'.format(self.access_token, department_id, fetch_child)
-        return rq_get(url)['userlist']
+        return rq.get(url)['userlist']
 
     def get_user_detail(self, user_id):
         """
@@ -172,7 +173,7 @@ class WorkWechatCorpAPI(BaseWechatAPI):
             self.access_token,
             user_id
         )
-        return rq_get(url)
+        return rq.get(url)
 
     def get_tag_list(self):
         """
@@ -187,7 +188,7 @@ class WorkWechatCorpAPI(BaseWechatAPI):
         ]
         """
         url = 'https://qyapi.weixin.qq.com/cgi-bin/tag/list?access_token={}'.format(self.access_token)
-        return rq_get(url)['taglist']
+        return rq.get(url)['taglist']
 
     def get_tag_user_list(self, tag_id):
         """
@@ -203,4 +204,4 @@ class WorkWechatCorpAPI(BaseWechatAPI):
         ],
         """
         url = 'https://qyapi.weixin.qq.com/cgi-bin/tag/get?access_token={}&tagid={}'.format(self.access_token, tag_id)
-        return rq_get(url)['userlist']
+        return rq.get(url)['userlist']

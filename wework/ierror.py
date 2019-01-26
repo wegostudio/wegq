@@ -24,3 +24,7 @@ class UploadTypeError(Exception):
 
 class UploadError(Exception):
     pass
+
+
+class SuiteTicketError(Exception):
+    pass

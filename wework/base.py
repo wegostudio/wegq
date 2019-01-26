@@ -1,4 +1,5 @@
 from .ierror import GetAccessTokenError
+import time
 
 
 class BaseWechatAPI(object):
@@ -6,7 +7,9 @@ class BaseWechatAPI(object):
     def access_token(self):
         g = self._global_access_token
         if 'access_token' not in g or time.time() >= g['expires_time']:
-            self._get_access_token()
+            access_token, expires_in = self._get_access_token()
+            g['access_token'] = access_token
+            g['expires_time'] = expires_in + int(time.time())
         return self._global_access_token['access_token']
 
     @access_token.setter
