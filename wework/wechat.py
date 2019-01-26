@@ -195,9 +195,9 @@ class WorkWechatSuiteApi(BaseWechatAPI):
         url = 'https://qyapi.weixin.qq.com/cgi-bin/service/get_permanent_code?suite_access_token={}'.format(
             self.access_token
         )
-        return rq.post(url, {
+        return requests.post(url, json={
             'auth_code': auth_code
-        })
+        }).json()
 
     def get_corp_access_token(self, corp_id, permanent_code):
         url = 'https://qyapi.weixin.qq.com/cgi-bin/service/get_corp_token?suite_access_token={}'.format(
