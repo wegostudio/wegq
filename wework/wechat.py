@@ -286,10 +286,10 @@ class WorkWechatSuiteApi(BaseWechatAPI):
         def wrapper(func):
             def get_corp_info(request, *args, **kwargs):
                 helper = self.settings.HELPER(request)
-                auth_code = helper.get_params().get('code', '')
+                auth_code = helper.get_params().get('auth_code', '')
                 if auth_code:
                     request.corp_info = self.get_corp_access_token_and_info(auth_code)
-                    return func(*args, **kwargs)
+                    return func(request, *args, **kwargs)
                 pre_auth_code = self.set_session_info(self.pre_auth_code, test)
                 path = helper.get_current_path()
                 return helper.redirect(self.get_install_url(path, pre_auth_code))
