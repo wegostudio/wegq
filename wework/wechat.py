@@ -104,13 +104,15 @@ class WorkWechatSuiteApi(BaseWechatAPI):
 
     def get_install_url(self, path, auth_code):
         url = 'https://open.work.weixin.qq.com/3rdapp/install?' \
-              'suite_id={}&' \
-              'pre_auth_code={}&' \
-              'redirect_uri={}&state=STATE'.format(self.settings.SUITE_ID,
-                                                   auth_code,
-                                                   redirect_uri=self.settings.REGISTER_URL + path[1:],
-                                                   )
-        return url
+              'suite_id={suite_id}&' \
+              'pre_auth_code={pre_auth_code}&' \
+              'redirect_uri={url}&state=STATE'
+
+        return url.format(
+            suite_id=self.settings.SUITE_ID,
+            pre_auth_code=auth_code,
+            redirect_uri=self.settings.REGISTER_URL + path[1:]
+        )
 
     @property
     def pre_auth_code(self):
