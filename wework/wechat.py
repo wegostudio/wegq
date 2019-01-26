@@ -106,7 +106,7 @@ class WorkWechatSuiteApi(BaseWechatAPI):
         url = 'https://open.work.weixin.qq.com/3rdapp/install?' \
               'suite_id={suite_id}&' \
               'pre_auth_code={pre_auth_code}&' \
-              'redirect_uri={url}&state=STATE'
+              'redirect_uri={redirect_uri}&state=STATE'
 
         return url.format(
             suite_id=self.settings.SUITE_ID,
