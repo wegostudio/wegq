@@ -325,7 +325,7 @@ class WorkProviderWechatApi(BaseWechatAPI):
 
     def get_user_info(self, code):
         url = 'https://qyapi.weixin.qq.com/cgi-bin/service/get_login_info?access_token={}'.format(self.access_token)
-        data = rq.post(url, {
+        data = requests.post(url, json={
             'auth_code': code,
         })
         return WechatUser(data)
