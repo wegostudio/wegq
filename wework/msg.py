@@ -1,5 +1,6 @@
 import json
 import requests
+import wework.rq as rq
 from .ierror import SendMsgError, GetAccessTokenError, UploadTypeError, UploadError
 
 

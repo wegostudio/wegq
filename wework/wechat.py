@@ -57,20 +57,21 @@ class WorkWechatSuiteApi(BaseWechatAPI):
     """第三方应用api"""
     def __init__(self, settings):
         self.settings = settings
-        self._global_access_token = {}
+        self._global_access_token = {'name': ('suite_access_token', 'suite_expires_time')}
         self._auth_code = {}
 
     @property
     def suite_ticket(self):
-        try:
-            ticket = self.settings.data['SUITE_TICKET']
-        except KeyError:
+        helper = self.settings.HELPER
+        ticket = helper.cache_get('wework_suite_ticket')
+        if ticket is None:
             raise SuiteTicketError('suite ticket 为空')
         return ticket
 
     @suite_ticket.setter
     def suite_ticket(self, value):
-        self.settings.data['SUITE_TICKET'] = value
+        helper = self.settings.HELPER
+        helper.cache_set('wework_suite_ticket', value)
 
     def _get_access_token(self):
         """获取第三方应用凭证"""
@@ -89,6 +90,7 @@ class WorkWechatSuiteApi(BaseWechatAPI):
             snsapi_base：静默授权，可获取成员的基础信息（UserId与DeviceId）；
             snsapi_userinfo：静默授权，可获取成员的详细信息，但不包含手机、邮箱等敏感信息；
             snsapi_privateinfo：手动授权，可获取成员的详细信息，包含手机、邮箱等敏感信息。
+        :param login_path: 登录地址。
         :return: url
         """
         if scope not in ['snsapi_base', 'snsapi_userinfo', 'snsapi_privateinfo']:
@@ -215,6 +217,7 @@ class WorkWechatSuiteApi(BaseWechatAPI):
         """
         https://work.weixin.qq.com/api/doc#90001/90143/90604
         :param permanent_code: 永久授权码
+        :param corp_id: 企业id
         :return: 
         {
             "errcode":0 ,
@@ -301,7 +304,7 @@ class WorkProviderWechatApi(BaseWechatAPI):
     """服务商api"""
     def __init__(self, settings):
         self.settings = settings
-        self._global_access_token = {}
+        self._global_access_token = {'name': ('provider_access_token', 'provider_expires_time')}
 
     def get_login_url(self, login_path):
         """扫码登录"""

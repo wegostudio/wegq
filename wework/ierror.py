@@ -28,3 +28,7 @@ class UploadError(Exception):
 
 class SuiteTicketError(Exception):
     pass
+
+
+class CacheNotExistError(Exception):
+    pass

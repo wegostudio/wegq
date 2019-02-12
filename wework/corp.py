@@ -44,6 +44,15 @@ class WorkWechatCorpAPI(BaseWechatAPI):
             raise GetAccessTokenError(data)
         return data['access_token'], data['expires_in']
 
+    @property
+    def access_token(self):
+        g = self._global_access_token
+        if 'access_token' not in g or time.time() >= g['expires_time']:
+            access_token, expires_in = self._get_access_token()
+            g['access_token'] = access_token
+            g['expires_time'] = expires_in + int(time.time())
+        return self._global_access_token['access_token']
+
     def get_department_list(self, id=None):
         """
         https://work.weixin.qq.com/api/doc#90000/90135/90208
