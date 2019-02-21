@@ -33,14 +33,14 @@ class WorkWechatApi(object):
     def suite_api(self):
         if not self._suite_api:
             self.check_settings(['SUITE_ID', 'SUITE_SECRET'])
-            self._suite_api = WorkWechatSuiteApi(self.settings)
+            self._suite_api = WorkWechatSuiteApi(self.settings, self)
         return self._suite_api
 
     @property
     def provider_api(self):
         if not self._provider_api:
             self.check_settings(['CROP_ID', 'PROVIDER_SECRET'])
-            self._provider_api = WorkProviderWechatApi(self.settings)
+            self._provider_api = WorkProviderWechatApi(self.settings, self)
             self.qrcode_login_required = self._provider_api.login_required
         return self._provider_api
 
@@ -55,7 +55,8 @@ class WorkWechatApi(object):
 
 class WorkWechatSuiteApi(BaseWechatAPI):
     """第三方应用api"""
-    def __init__(self, settings):
+    def __init__(self, settings, wechat_api):
+        self.wechat_api = wechat_api
         self.settings = settings
         self._global_access_token = {'name': ('suite_access_token', 'suite_expires_time')}
         self._auth_code = {}
@@ -102,6 +103,23 @@ class WorkWechatSuiteApi(BaseWechatAPI):
               'scope={scope}#wechat_redirect'.format(app_id=self.settings.SUITE_ID,
                                                      redirect_uri=self.settings.REGISTER_URL + login_path[1:],
                                                      scope=scope)
+        return url
+
+    def get_qrcode_login_url(self, login_path, user_type='member'):
+        """
+        
+        :param login_path: 登录地址。 
+        :param user_type: 支持登录的类型。admin代表管理员登录（使用微信扫码）,member代表成员登录（使用企业微信扫码）
+        :return: url
+        """
+        if user_type not in ['member', 'admin']:
+            raise ValueError('user_type 值不为 member、admin 任意之一')
+        url = 'https://open.work.weixin.qq.com/wwopen/sso/3rd_qrConnect?' \
+              'appid={corpid}&' \
+              'redirect_uri={redirect_url}&state=&' \
+              'usertype={user_type}'.format(corpid=self.settings.CROP_ID,
+                                            redirect_url=self.settings.REGISTER_URL + login_path[1:],
+                                            user_type=user_type)
         return url
 
     def get_install_url(self, path, auth_code):
@@ -172,6 +190,21 @@ class WorkWechatSuiteApi(BaseWechatAPI):
         del data['errcode']
         del data['errmsg']
         return WechatUser(data)
+
+    def qrcode_login_required(self, user_type='member'):
+        """企业微信扫码授权登录"""
+        def wrapper(func):
+            def get_wx_user(request, *args, **kwargs):
+                helper = self.settings.HELPER(request)
+                code = helper.get_params().get('auth_code', '')
+                if code:
+                    work_wx_user = self.wechat_api.provider_api.get_user_info(code)
+                    request.work_wx_user = work_wx_user
+                    return func(request, *args, **kwargs)
+                path = helper.get_current_path()
+                return helper.redirect(self.get_qrcode_login_url(path, user_type))
+            return get_wx_user
+        return wrapper
 
     def web_login_required(self, scope='snsapi_userinfo'):
         """网页授权登录"""
@@ -302,7 +335,8 @@ class WorkWechatSuiteApi(BaseWechatAPI):
 
 class WorkProviderWechatApi(BaseWechatAPI):
     """服务商api"""
-    def __init__(self, settings):
+    def __init__(self, settings, wechat_api):
+        self.wechat_api = wechat_api
         self.settings = settings
         self._global_access_token = {'name': ('provider_access_token', 'provider_expires_time')}
 
