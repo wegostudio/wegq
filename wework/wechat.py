@@ -193,7 +193,7 @@ class WorkWechatSuiteApi(BaseWechatAPI):
         del data['errmsg']
         return WechatUser(data)
 
-    def qrcode_login_required(self, state='', user_type='member'):
+    def qrcode_login_required(self, state='state', user_type='member'):
         """企业微信扫码授权登录"""
         def wrapper(func):
             def get_wx_user(request, *args, **kwargs):
